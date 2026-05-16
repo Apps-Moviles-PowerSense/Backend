@@ -1,0 +1,88 @@
+@startuml
+'https://plantuml.com/class-diagram
+left to right direction
+package "Alerts.Domain" {
+
+    package "Model"{
+        package "Aggregates"{
+            class Alert <<Aggregate Root>> {
+                    - id: AlertId
+                    - type: AlertType
+                    - severity: AlertSeverity
+                    - deviceId: String
+                    - threshold: Double
+                    - message: String
+                    - acknowledged: Boolean
+                    - acknowledgedAt: Instant
+                    - userId: Long
+                    - createdAt: Instant
+                    - updatedAt: Instant
+                    + acknowledge(): Void
+                    + unacknowledge(): Void
+            }
+        }
+
+        package "Commands" {
+            record CreateAlert {
+                + type: String
+                + severity: String
+                + deviceId: String
+                + threshold: Double
+                + message: String
+            }
+            record AcknowledgeAlert {
+                + alertId: String
+            }
+        }
+
+        package "Queries" {
+            record GetAlertById {
+                + alertId: String
+            }
+            record ListAlerts(){
+                + type: String
+                + severity: String
+                + deviceId: String
+                + acknowledged: Boolean
+                + startDate: String
+                + endDate: String
+            }
+
+        }
+
+        package "ValueObjects" {
+
+            record AlertId {
+                + value: String
+            }
+            enum AlertSeverity <<Value Object>> {
+                INFO
+                WARNING
+                ERROR
+                CRITICAL
+            }
+
+            enum AlertType <<Value Object>> {
+                HIGH_CONSUMPTION
+                LOW_EFFICIENCY
+                DEVICE_OFFLINE
+                SCHEDULE_CONFLICT
+                THRESHOLD_EXCEEDED
+                CUSTOM
+            }
+        }
+
+    }
+
+    package "Exceptions"{
+
+        class AlertNotFoundException <<Exception>> {
+             + AlertNotFoundException(alertId: String)
+        }
+    }
+}
+
+Alert "1" --> "1" AlertId
+Alert "1" --> "1" AlertSeverity
+Alert "1" --> "1" AlertType
+@enduml

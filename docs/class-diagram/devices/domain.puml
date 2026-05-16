@@ -1,0 +1,247 @@
+@startuml
+left to right direction
+package "Devices.Domain" {
+
+    package "Exceptions"{
+        class DeviceNotFoundException <<Exception>> {
+                - deviceId: String
+                + DeviceNotFoundException(deviceId: String)
+                + getMessage(): String
+            }
+
+            class RoomNotFoundException <<Exception>> {
+                - roomId: String
+                + RoomNotFoundException(roomId: String)
+                + getMessage(): String
+            }
+
+            class InvalidDeviceOperationException <<Exception>> {
+                - message: String
+                + InvalidDeviceOperationException(message: String)
+                + getMessage(): String
+            }
+    }
+
+    package "Model"{
+        package "Aggregates"{
+            class Device <<Aggregate>> {
+                    - id: DeviceId
+                    - name: DeviceName
+                    - category: DeviceCategory
+                    - location: Location
+                    - status: DeviceStatus
+                    - power: PowerSpecification
+                    - userId: Long
+                    - domainEvents: List<DomainEvent>
+
+                    + activate(): Void
+                    + deactivate(): Void
+                    + changeLocation(newLocation: Location): Void
+                    + updatePower(power: PowerSpecification): Void
+                    + isActive(): Boolean
+                    + pullDomainEvents(): List<DomainEvent>
+                    + registerEvent(event: DomainEvent): Void
+            }
+
+            class Room <<Aggregate Root>>{
+                - id: RoomId
+                - name: RoomName
+                - userId: Long
+                - deviceIds: List<DeviceId>
+                + updateName(newName: RoomName): Void
+                + addDevice(deviceId: DeviceId): Void
+                + removeDevice(deviceId: DeviceId): Void
+            }
+        }
+
+        package "Commands" {
+            record CreateDevice {
+                + name: String
+                + category: String
+                + roomId: String
+                + roomName: String
+                + watts: int
+            }
+
+            record CreateRoom {
+               + name: String
+            }
+
+            record DeleteDevice {
+               + deviceId: String
+            }
+
+            record DeleteRoom {
+               + roomId: String
+            }
+
+            record ImportDevices {
+                + devices: List<DeviceData>
+                + static DeviceData: Record(name: String, category: String, roomId: String, roomName: String, watts: int)
+            }
+
+            record SetAllDevicesStatus {
+                + status: String
+            }
+
+            record SetDeviceStatus {
+                 + deviceId: String
+                + status: String
+            }
+
+            record SetRoomDevicesStatus {
+                + roomId: String
+                + status: String
+            }
+
+            record UpdateDevice {
+                + deviceId: String
+                + name: String
+                + category: String
+                + roomId: String
+                + roomName: String
+                + watts: int
+            }
+
+             record UpdateRoom {
+                + roomId: String
+                + name: String
+            }
+
+        }
+
+        package "Queries" {
+
+            record ExportDevices {}
+
+            record GetDeviceById {
+                + deviceId: String
+            }
+
+            record GetDeviceByRoomId {
+                + roomId: String
+                + status: String
+                + category: String
+            }
+
+            record GetRoomById {
+                + roomId: String
+            }
+
+            record ListDevices{
+                + search: String
+                + category: String
+                + roomId: String
+                + status: String
+            }
+
+            record ListRooms(){
+            }
+
+        }
+
+        package "Events" {
+            record AllDevicesStatusChanged {
+                + newStatus: String
+                + totalDevices: int
+                + occurredOn: Instant
+            }
+
+            record DeviceCreated {
+                + deviceId: String
+                + deviceName: String
+                + occurredOn: Instant
+            }
+            record DeviceDeleted{
+                + deviceId: String
+                + occurredOn: Instant
+            }
+            record DeviceImported{
+                + totalImported: int
+                + occurredOn: Instant
+            }
+            record DeviceStatusChanged{
+                + deviceId: String
+                + previousStatus: String
+                + newStatus: String
+                + occurredOn: Instant
+            }
+            record DeviceUpdated{
+                + deviceId: String
+                + occurredOn: Instant
+            }
+            record RoomDeviceStatusChanged{
+                + roomId: String
+                + roomName: String
+                + newStatus: String
+                + affectedDevices:
+                + occurredOn: Instant
+            }
+            interface DomainEvent {
+            }
+
+        }
+
+        package "ValueObjects" {
+
+            enum DeviceCategory{
+                LIGHT("light")
+                AC("ac")
+                TV("tv")
+                REFRIGERATOR("refrigerator")
+                HEATING("heating")
+                COMPUTER("computer")
+                GENERIC_POWER("genericPower")
+            }
+            record DeviceId{
+                + value: String
+            }
+            record DeviceName{
+                + value: String
+            }
+
+            enum DeviceStatus{
+                ACTIVE
+                INACTIVE
+            }
+            record Location{
+                + roomId: RoomId
+                + roomName: RoomName
+            }
+            record PowerSpecification{
+                + watts: int
+                + voltage: Integer
+                + amperage: Integer
+            }
+
+            record RoomId{
+                + value: String
+            }
+            record RoomName{
+                + value: String
+            }
+        }
+
+    }
+
+    package "Services"{
+    interface DeviceService {
+            + validateDeviceCanBeActivated(): Void
+            + canDeleteDevice():Boolean
+        }
+    }
+
+
+}
+
+Device "1" --> "1" DeviceId
+Device "1" --> "1" DeviceName
+Device "1" --> "1" DeviceCategory
+Device "1" --> "1" Location
+Device "1" --> "1" DeviceStatus
+Device "1" --> "1" PowerSpecification
+Room "1" --> "1" RoomId
+Room "1" --> "1" RoomName
+
+
+@enduml

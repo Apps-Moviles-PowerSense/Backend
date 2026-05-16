@@ -1,0 +1,97 @@
+@startuml
+
+left to right direction
+package "Auth.Domain.Model" {
+
+    package "Aggregates"{
+        class User <<Aggregate Root>> {
+                - id: Long
+                - email: Email
+                - passwordHash: String
+                - name: String
+                - avatarUrl: String
+                - isActive: Boolean
+                - createdAt: LocalDateTime
+                - updatedAt: LocalDateTime
+
+                + updateProfile(command: UpdateUserProfileCommand)
+                + deactivate(): Void
+                + activate(): Void
+                + getEmailValue(): String
+                + getInitials(): String
+                + hasAvatar(): Boolean
+        }
+    }
+
+    package "Commands" {
+        record RegisterUserCommand {
+            + email: String
+            + password: String
+            + name: String
+        }
+        record LoginUserCommand {
+            + email: String
+            + password: String
+        }
+        record UpdateUserProfileCommand {
+            + userId: Long
+            + name: String
+            + avatarUrl: String
+        }
+    }
+
+    package "Queries" {
+        record GetUserByIdQuery {
+            + userId: Long
+        }
+        record GetUserByEmailQuery {
+            + email: String
+        }
+    }
+
+    package "ValueObjects" {
+
+        record Email <<Value Object>> {
+            - value: String
+            - validate(email: String): Void
+            + getValue(): String
+            + toString(): String
+        }
+
+        record Password <<Value Object>> {
+            - value: String
+            - validate(password: String): Void
+            + getValue(): String
+        }
+    }
+}
+
+package "Auth.Domain.Services" {
+    interface UserCommandService <<Domain Service>> {
+        + handle(command: RegisterUserCommand)
+        + handle(command: UpdateUserProfileCommand)
+        + deleteUser(userId: Long)
+    }
+
+    interface UserQueryService <<Domain Service>> {
+        + handle(query: GetUserByIdQuery): User
+        + handle(query: GetUserByEmailQuery): User
+    }
+}
+
+' Relaciones
+User "1" *-- "1" Email : contains
+User "1" *-- "1" Password : contains
+
+User ..> RegisterUserCommand : triggers
+User ..> UpdateUserProfileCommand : triggers
+
+UserCommandService ..> User : manages
+UserCommandService ..> RegisterUserCommand : processes
+UserCommandService ..> LoginUserCommand : processes
+UserCommandService ..> UpdateUserProfileCommand : processes
+
+UserQueryService ..> User : retrieves
+UserQueryService ..> GetUserByIdQuery : processes
+UserQueryService ..> GetUserByEmailQuery : processes
+@enduml

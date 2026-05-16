@@ -1,0 +1,402 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+left to right direction
+
+package "Scheduling.Domain" {
+
+    package "Exceptions"{
+        class DomainException <<Exception>> {
+                + DomainException(message: String)
+        }
+
+        class InvalidTimeSlotException <<Exception>> {
+                + InvalidTimeSlotException(message: String)
+        }
+
+        class InvalidRuleConditionException <<Exception>> {
+                + InvalidRuleConditionException(message: String)
+        }
+
+        class DuplicateScheduleException <<Exception>> {
+                + DuplicateScheduleException(message: String)
+        }
+
+        class ScheduleNotFoundException <<Exception>> {
+                + ScheduleNotFoundException(scheduleId: String)
+        }
+
+        class RuleNotFoundException <<Exception>> {
+                + RuleNotFoundException(ruleId: String)
+        }
+    }
+
+    package "Model"{
+        package "Aggregates"{
+            class Schedule <<Aggregate Root>> {
+                    - id: ScheduleId
+                    - deviceId: DeviceId
+                    - deviceName: String
+                    - roomName: String
+                    - enabled: Boolean
+                    - userId: Long
+                    - entries: List<ScheduleEntry>
+                    - createdAt: Instant
+                    - updatedAt: Instant
+                    - domainEvents: List<DomainEvent>
+
+                    + enable(): Void
+                    + disable(): Void
+                    + addEntry(entry: ScheduleEntry): Void
+                    + removeEntry(index: int): Void
+                    + updateEntry(index: int, entry: ScheduleEntry): Void
+                    + validateNoTimeConflicts(): Void
+                    + isEnabled(): Boolean
+                    + getEntries(): List<ScheduleEntry>
+                    + pullDomainEvents(): List<DomainEvent>
+            }
+
+            class QuickSchedule <<Aggregate Root>> {
+                    - id: QuickScheduleId
+                    - name: String
+                    - description: String
+                    - scope: QuickScheduleScope
+                    - icon: String
+                    - roomIds: List<String>
+                    - defaultEntries: List<ScheduleEntry>
+
+                    + getApplicableRoomIds(): List<String>
+                    + appliesTo(device: Device): Boolean
+                    + getDefaultEntries(): List<ScheduleEntry>
+            }
+
+            class ScheduleRule <<Aggregate Root>> {
+                    - id: RuleId
+                    - type: RuleType
+                    - name: String
+                    - description: String
+                    - enabled: Boolean
+                    - priority: int
+                    - conditions: List<RuleCondition>
+                    - actions: List<RuleAction>
+                    - domainEvents: List<DomainEvent>
+
+                    + enable(): Void
+                    + disable(): Void
+                    + shouldExecute(context: ScheduleExecutionContext): Boolean
+                    + execute(): Void
+                    + addCondition(condition: RuleCondition): Void
+                    + addAction(action: RuleAction): Void
+                    + setPriority(priority: int): Void
+                    + getPriority(): int
+                    + pullDomainEvents(): List<DomainEvent>
+            }
+        }
+
+        package "Entities" {
+            class ScheduleEntry {
+                    - action: ScheduleAction
+                    - time: TimeSlot
+                    - days: List<DayOfWeek>
+
+                    + appliesOnDay(day: DayOfWeek): Boolean
+                    + isScheduledAt(time: LocalTime, day: DayOfWeek): Boolean
+                    + toReadableString(): String
+                    + getAction(): ScheduleAction
+                    + getTime(): TimeSlot
+                    + getDays(): List<DayOfWeek>
+            }
+
+            class RuleCondition {
+                    - type: ConditionType
+                    - value: Object
+
+                    + isMet(context: ScheduleExecutionContext): Boolean
+                    + getDescription(): String
+                    + getType(): ConditionType
+                    + getValue(): Object
+            }
+
+            class RuleAction {
+                    - type: ActionType
+                    - deviceIds: List<String>
+                    - roomIds: List<String>
+                    - excludeDeviceIds: List<String>
+                    - excludeRoomIds: List<String>
+                    - category: String
+                    - value: Object
+
+                    + execute(context: ScheduleExecutionContext): Void
+                    + getAffectedDevices(devices: List<Device>): List<Device>
+                    + getDescription(): String
+                    + getType(): ActionType
+                    + getValue(): Object
+            }
+        }
+
+        package "Commands" {
+            record CreateSchedule {
+                + deviceId: String
+                + deviceName: String
+                + roomName: String
+                + enabled: Boolean
+                + schedules: List<ScheduleEntryData>
+            }
+
+            record UpdateSchedule {
+                + scheduleId: String
+                + deviceName: String
+                + roomName: String
+                + schedules: List<ScheduleEntryData>
+            }
+
+            record DeleteSchedule {
+                + scheduleId: String
+            }
+
+            record ToggleSchedule {
+                + scheduleId: String
+                + enable: Boolean
+            }
+
+            record ApplyQuickSchedule {
+                + quickScheduleId: String
+                + targetDeviceIds: List<String>
+                + targetRoomIds: List<String>
+            }
+
+            record UpdateScheduleRule {
+                + ruleId: String
+                + name: String
+                + description: String
+                + priority: int
+            }
+
+            record ToggleScheduleRule {
+                + ruleId: String
+                + enable: Boolean
+            }
+        }
+
+        package "Queries" {
+            record GetScheduleById {
+                + scheduleId: String
+            }
+
+            record GetScheduleByDeviceId {
+                + deviceId: String
+            }
+
+            record ListSchedules {
+                + search: String
+                + roomId: String
+                + enabled: Boolean
+                + deviceId: String
+            }
+
+            record GetScheduleRuleById {
+                + ruleId: String
+            }
+
+            record ListScheduleRules {
+                + type: String
+                + enabled: Boolean
+            }
+
+            record GetScheduleStats {
+                + scheduleId: String
+            }
+        }
+
+        package "Events" {
+            record ScheduleCreated {
+                + scheduleId: String
+                + deviceId: String
+                + occurredOn: Instant
+            }
+
+            record ScheduleEnabled {
+                + scheduleId: String
+                + deviceId: String
+                + occurredOn: Instant
+            }
+
+            record ScheduleDisabled {
+                + scheduleId: String
+                + deviceId: String
+                + occurredOn: Instant
+            }
+
+            record ScheduleUpdated {
+                + scheduleId: String
+                + occurredOn: Instant
+            }
+
+            record ScheduleDeleted {
+                + scheduleId: String
+                + deviceId: String
+                + occurredOn: Instant
+            }
+
+            record RuleEnabled {
+                + ruleId: String
+                + occurredOn: Instant
+            }
+
+            record RuleDisabled {
+                + ruleId: String
+                + occurredOn: Instant
+            }
+
+            record RuleExecuted {
+                + ruleId: String
+                + ruleName: String
+                + affectedDevices: int
+                + occurredOn: Instant
+            }
+
+            record QuickScheduleApplied {
+                + quickScheduleId: String
+                + appliedCount: int
+                + occurredOn: Instant
+            }
+
+            interface DomainEvent {
+            }
+        }
+
+        package "ValueObjects" {
+
+            record ScheduleId {
+                + value: String
+            }
+
+            record QuickScheduleId {
+                + value: String
+            }
+
+            record RuleId {
+                + value: String
+            }
+
+            record TimeSlot {
+                + hour: int
+                + minute: int
+
+                + isBefore(other: TimeSlot): Boolean
+                + isAfter(other: TimeSlot): Boolean
+                + toFormattedString(): String
+                + toLocalTime(): LocalTime
+                + fromString(time: String): TimeSlot
+            }
+
+            record ScheduleStats {
+                + totalSchedules: int
+                + enabledSchedules: int
+                + totalRules: int
+                + enabledRules: int
+            }
+
+            enum ScheduleAction <<Value Object>> {
+                ON
+                OFF
+
+                + isOn(): Boolean
+                + isOff(): Boolean
+                + toggle(): ScheduleAction
+            }
+
+            enum DayOfWeek <<Value Object>> {
+                MONDAY
+                TUESDAY
+                WEDNESDAY
+                THURSDAY
+                FRIDAY
+                SATURDAY
+                SUNDAY
+
+                + isWeekday(): Boolean
+                + isWeekend(): Boolean
+                + toSpanish(): String
+                + fromString(day: String): DayOfWeek
+            }
+
+            enum ActionType <<Value Object>> {
+                TURN_OFF
+                TURN_ON
+                TURN_OFF_ALL
+                TURN_OFF_CATEGORY
+                DIM_CATEGORY
+                DISABLE_CATEGORY
+                ADJUST_TEMPERATURE
+            }
+
+            enum ConditionType <<Value Object>> {
+                TIME_RANGE
+                NO_MOTION
+                ENERGY_THRESHOLD
+                TEMPERATURE
+                MOTION_DETECTED
+            }
+
+            enum RuleType <<Value Object>> {
+                NIGHT_MODE
+                ENERGY_SAVING
+                AWAY_MODE
+                WELCOME_HOME
+                PEAK_HOURS_OPTIMIZATION
+            }
+
+            enum QuickScheduleScope <<Value Object>> {
+                ALL
+                BEDROOMS
+                COMMON_AREAS
+                CUSTOM
+            }
+        }
+    }
+
+    package "Services"{
+        interface ScheduleService {
+            + validateDeviceCanBeScheduled(): Void
+            + canDeleteSchedule(): Boolean
+        }
+
+        class ScheduleExecutor {
+            + execute(rule: ScheduleRule, context: ScheduleExecutionContext): Void
+        }
+
+        class ScheduleExecutionContext {
+            - currentTime(): LocalTime
+            - minutesWithoutMotion(): int
+            - currentEnergyConsumption(): int
+            - currentTemperature(): int
+            - isMotionDetectedInRooms(roomIds: List<String>): Boolean
+        }
+    }
+
+}
+
+Schedule "1" --> "1" ScheduleId
+Schedule "1" --> "*" ScheduleEntry
+Schedule "1" --> "1" QuickScheduleId
+Schedule "1" --> "*" DomainEvent
+
+QuickSchedule "1" --> "1" QuickScheduleId
+QuickSchedule "1" --> "*" ScheduleEntry
+QuickSchedule "1" --> "1" QuickScheduleScope
+
+ScheduleRule "1" --> "1" RuleId
+ScheduleRule "1" --> "1" RuleType
+ScheduleRule "1" --> "*" RuleCondition
+ScheduleRule "1" --> "*" RuleAction
+ScheduleRule "1" --> "*" DomainEvent
+
+ScheduleEntry "1" --> "1" ScheduleAction
+ScheduleEntry "1" --> "1" TimeSlot
+ScheduleEntry "1" --> "*" DayOfWeek
+
+RuleCondition "1" --> "1" ConditionType
+RuleAction "1" --> "1" ActionType
+
+@enduml
