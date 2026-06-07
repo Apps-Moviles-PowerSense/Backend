@@ -35,7 +35,7 @@ public class ScheduleEntity {
 	@Column(nullable = false)
 	private boolean enabled;
 
-	@OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
 	private List<ScheduleEntryEntity> entries = new ArrayList<>();
 
 	@Column(name = "user_id")

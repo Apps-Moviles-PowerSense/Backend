@@ -11,6 +11,7 @@ import com.powersense.inventory.scheduling.domain.model.queries.*;
 import com.powersense.inventory.scheduling.domain.model.valueobjects.RuleId;
 import com.powersense.inventory.scheduling.domain.model.valueobjects.ScheduleId;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Locale;
@@ -28,6 +29,7 @@ public class ScheduleQueryServiceImpl {
 		this.scheduleRuleRepository = scheduleRuleRepository;
 	}
 
+	@Transactional(readOnly = true)
 	public List<Schedule> listSchedules(ListSchedules query) {
 		List<Schedule> all = scheduleRepository.findAll();
 		if (query == null) return all;
@@ -44,11 +46,13 @@ public class ScheduleQueryServiceImpl {
 				.collect(Collectors.toList());
 	}
 
+	@Transactional(readOnly = true)
 	public Schedule getScheduleById(GetScheduleById query) {
 		return scheduleRepository.findById(new ScheduleId(query.scheduleId()))
 				.orElseThrow(() -> new ScheduleNotFoundException(query.scheduleId()));
 	}
 
+	@Transactional(readOnly = true)
 	public Schedule getScheduleByDeviceId(GetScheduleByDeviceId query) {
 		return scheduleRepository.findByDeviceId(new DeviceId(query.deviceId()))
 				.orElseThrow(() -> new ScheduleNotFoundException("deviceId=" + query.deviceId()));

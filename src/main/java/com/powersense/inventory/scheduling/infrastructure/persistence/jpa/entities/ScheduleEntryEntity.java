@@ -30,7 +30,7 @@ public class ScheduleEntryEntity {
 	@Column(nullable = false)
 	private int minute;
 
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "schedule_entry_days", joinColumns = @JoinColumn(name = "entry_id"))
 	@Column(name = "day")
 	@Enumerated(EnumType.STRING)

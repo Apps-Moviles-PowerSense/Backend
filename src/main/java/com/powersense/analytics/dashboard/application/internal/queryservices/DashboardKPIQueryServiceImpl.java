@@ -8,6 +8,7 @@ import com.powersense.inventory.devices.domain.model.valueobjects.DeviceStatus;
 import com.powersense.inventory.scheduling.application.internal.outboundservices.repositories.ScheduleRepository;
 import com.powersense.inventory.scheduling.domain.model.aggregates.Schedule;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class DashboardKPIQueryServiceImpl {
 		this.kpiCalculator = kpiCalculator;
 	}
 
+	@Transactional(readOnly = true)
 	public DashboardKPIsResponse getKPIs() {
 		List<Device> devices = deviceRepository.findAll();
 
