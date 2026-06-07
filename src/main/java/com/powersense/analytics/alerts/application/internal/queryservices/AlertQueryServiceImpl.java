@@ -70,10 +70,6 @@ public class AlertQueryServiceImpl {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
-        String token = (String) authentication.getCredentials();
-        if (token == null) {
-            return null;
-        }
-        return jwtTokenService.extractUserId(token);
+        return (Long) authentication.getPrincipal();
     }
 }
