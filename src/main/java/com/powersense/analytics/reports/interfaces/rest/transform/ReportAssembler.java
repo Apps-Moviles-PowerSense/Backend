@@ -42,7 +42,8 @@ public class ReportAssembler {
 			r.setDepartmentId(m.getRoomId());
 			r.setDepartmentName(m.getRoomName());
 			r.setMetric(m.getMetricType());
-			r.setValue(m.getValue());
+			r.setCurrentPeriod(m.getValue());
+			r.setPreviousPeriod(m.getPreviousValue());
 			return r;
 		}).collect(Collectors.toList());
 	}

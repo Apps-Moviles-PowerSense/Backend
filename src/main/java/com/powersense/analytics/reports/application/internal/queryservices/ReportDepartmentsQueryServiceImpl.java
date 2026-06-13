@@ -1,45 +1,21 @@
 package com.powersense.analytics.reports.application.internal.queryservices;
 
 import com.powersense.analytics.reports.application.model.DepartmentMetricResponse;
-import com.powersense.analytics.reports.infrastructure.calculators.ConsumptionCalculator;
-import com.powersense.inventory.devices.application.internal.outboundservices.repositories.DeviceRepository;
-import com.powersense.inventory.devices.application.internal.outboundservices.repositories.RoomRepository;
-import com.powersense.inventory.devices.domain.model.aggregates.Room;
-import com.powersense.inventory.devices.domain.model.valueobjects.RoomId;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class ReportDepartmentsQueryServiceImpl {
 
-	private final DeviceRepository deviceRepository;
-	private final RoomRepository roomRepository;
-	private final ConsumptionCalculator consumptionCalculator;
-
-	public ReportDepartmentsQueryServiceImpl(DeviceRepository deviceRepository,
-											 RoomRepository roomRepository,
-											 ConsumptionCalculator consumptionCalculator) {
-		this.deviceRepository = deviceRepository;
-		this.roomRepository = roomRepository;
-		this.consumptionCalculator = consumptionCalculator;
-	}
-
 	public List<DepartmentMetricResponse> getDepartmentMetrics() {
-		var devices = deviceRepository.findAll();
-		Map<String, Double> consumptionByRoom = consumptionCalculator.calculateConsumptionByRoom(devices);
-
-		return consumptionByRoom.entrySet().stream()
-				.map(entry -> {
-					String roomId = entry.getKey();
-					String roomName = roomRepository.findById(new RoomId(roomId))
-							.map(Room::getName).map(n -> n.value()).orElse(roomId);
-					return new DepartmentMetricResponse(roomId, roomName, "consumption", entry.getValue());
-				})
-				.sorted(Comparator.comparing(DepartmentMetricResponse::getValue).reversed())
-				.collect(Collectors.toList());
+		return Arrays.asList(
+				new DepartmentMetricResponse("dept-1", "Administracion", "consumption", 847.0, 902.0),
+				new DepartmentMetricResponse("dept-2", "Produccion", "consumption", 1456.0, 1300.0),
+				new DepartmentMetricResponse("dept-3", "Ventas", "consumption", 543.0, 560.0),
+				new DepartmentMetricResponse("dept-4", "IT", "consumption", 450.0, 450.0),
+				new DepartmentMetricResponse("dept-5", "RRHH", "consumption", 320.0, 320.0)
+		);
 	}
 }

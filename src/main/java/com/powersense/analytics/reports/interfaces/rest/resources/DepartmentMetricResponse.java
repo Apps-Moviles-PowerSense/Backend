@@ -4,7 +4,8 @@ public class DepartmentMetricResponse {
 	private String departmentId;
 	private String departmentName;
 	private String metric;
-	private double value;
+	private double currentPeriod;
+	private double previousPeriod;
 
 	public String getDepartmentId() {
 		return departmentId;
@@ -30,11 +31,19 @@ public class DepartmentMetricResponse {
 		this.metric = metric;
 	}
 
-	public double getValue() {
-		return value;
+	public double getCurrentPeriod() {
+		return currentPeriod;
 	}
 
-	public void setValue(double value) {
-		this.value = value;
+	public void setCurrentPeriod(double currentPeriod) {
+		this.currentPeriod = currentPeriod;
+	}
+
+	public double getPreviousPeriod() {
+		return previousPeriod;
+	}
+
+	public void setPreviousPeriod(double previousPeriod) {
+		this.previousPeriod = previousPeriod;
 	}
 }

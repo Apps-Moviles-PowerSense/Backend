@@ -6,20 +6,16 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ReportHistoryQueryServiceImpl {
 
 	public List<ReportHistoryResponse> getReportHistory() {
 		return Arrays.asList(
-				new ReportHistoryResponse("hist-1", LocalDate.of(2025, 1, 31),
-						"Reporte Enero 2025", "consumption", "Administración", 847, 423, -5),
-				new ReportHistoryResponse("hist-2", LocalDate.of(2025, 1, 31),
-						"Reporte Enero 2025", "consumption", "Producción", 1456, 728, 12),
-				new ReportHistoryResponse("hist-3", LocalDate.of(2024, 12, 31),
-						"Reporte Diciembre 2024", "efficiency", "General", 0, 0, -3),
-				new ReportHistoryResponse("hist-4", LocalDate.of(2024, 12, 31),
-						"Reporte Diciembre 2024", "costs", "General", 2980, 1490, 3)
+				new ReportHistoryResponse(UUID.randomUUID().toString(), LocalDate.now().minusMonths(1), "Reporte Mensual", "PDF", "Administracion", 847.0, 423.0, 87),
+				new ReportHistoryResponse(UUID.randomUUID().toString(), LocalDate.now().minusMonths(2), "Reporte Trimestral", "CSV", "Produccion", 1456.0, 728.0, 92),
+				new ReportHistoryResponse(UUID.randomUUID().toString(), LocalDate.now().minusMonths(3), "Reporte Anual", "PDF", "Ventas", 543.0, 272.0, 85)
 		);
 	}
 }
